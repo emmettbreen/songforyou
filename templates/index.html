@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="{{ url_for('static', filename= 'css/style.css') }}">
+    <title>SongForYou</title>
+</head>
+
+
+<html>
+
+<div>
+    <h1>
+        Welcome to SongForYou
+    </h1>
+</div>
+
+<div>
+    <h2> {{ thanks }}</h2>
+</div>
+<br>
+
+<div>
+    <h2>
+        Add 5 of your favorite songs
+    </h2>
+</div>
+
+
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <ul class="flashes">
+    {% for message in messages %}
+      <li>{{ message }}</li>
+    {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
+
+
+{% from "_formhelpers.html" import render_field %}
+<form method="post">
+  <dl>
+    <p>
+    {{ render_field(form.search) }}
+  </p></dl>
+  <p><input type="submit" value="Search">
+</p></form>
+
+
+<div>
+    <div>
+        <h3> {{ choices[0] }}</h3>
+    </div>
+    <div>
+        <h3> {{ choices[1] }}</h3>
+    </div>
+    <div>
+        <h3> {{ choices[2] }}</h3>
+    </div>
+    <div>
+        <h3> {{ choices[3] }}</h3>
+    </div>
+    <div>
+        <h3> {{ choices[4] }} </h3>
+    </div>
+</div>
+
+
+<form action="/clear">
+    <button type="submit">Clear Selection</button>
+</form>
+
+
+<br>
+<br>
+
+
+<div>
+    <h2>
+        And our algorithm will recommend you one more
+    </h2>
+    <form action="/calculate">
+        <button type="submit">Find My Song</button>
+    </form>
+</div>
+
+
+<div>
+    <h3>
+        Our recommendation is...
+    </h3>
+
+    <h2>
+        {{ recommendation }}
+    </h2>
+
+    <h3>
+        How did we do?
+    </h3>
+    <form action="/feedback/1">
+        <button type="submit">Like</button>
+    </form>
+    <form action="/feedback/0">
+        <button type="submit">Dislike</button>
+    </form>
+    
+</div>
+
+
+
+<br>
+<br>
+
+<footer>
+<h5>Emmett Breen © 2022</h5>
+</footer>
+
+</html>

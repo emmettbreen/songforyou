@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="{{ url_for('static', filename= 'css/style.css') }}">
+    <title>SongForYou</title>
+</head>
+
+
+<html>
+
+<body>
+
+<!--<form method = "post">
+{% for song in songs %}
+    <div> 
+        <input type="button" value="{{ song }}">
+        <br>
+    </div>
+{% endfor %}
+</form>-->
+
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <ul class="flashes">
+    {% for message in messages %}
+      <li>{{ message }}</li>
+    {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
+
+{% from "_formhelpers.html" import render_field %}
+<form method="post">
+  <dl>
+    {{ render_field(form.select) }}
+</dl>
+<p>
+    {{ render_field(form.add) }}
+</p>
+
+</form>
+
+
+
+
+
+
+<footer>
+    <h5>Emmett Breen © 2022</h5>
+    </footer>
+
+</body>
+
+
+
+<script>
+    /*const button = document.querySelector('input');
+    button.addEventListener('click', update);
+    
+    function update() {
+        print("here");
+        $.post( "/postmethod", {
+            javascript_data: button.value
+        });
+    }
+    $("button").click(function(e) {
+        e.preventDefault();
+        $.ajax({
+            type: "POST",
+            url: "/postmethod",
+            data: { 
+                id: $(this).val(), // < note use of 'this' here
+                javascript_data: button.value
+            },
+            success: function(result) {
+                alert('ok');
+            },
+            error: function(result) {
+                alert('error');
+            }
+        });
+    });*/
+    </script>
+
+</html>
