@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="{{ url_for('static', filename= 'css/style.css') }}">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+    <title>SongForYou</title>
+
+</head>
+
+
+<html>
+
+<h1>
+    Our recommendation is...
+</h1>
+
+<div class="favorite">
+    <h1>{{ recommendation }}</h1>
+</div>
+
+<h2 class="{{ correlation }}">
+    Correlation: {{ correlation }}
+</h2>
+<h3>How similar your input songs are. Higher correlation indicates a higher chance that the algoritm will find your perfect recommendation. This is a characteristic of the input</h3>
+<h2 class ="{{ color }}">
+    Confidence: {{ confidence }}
+</h2>
+<h3>How confident the algorithm is that you will like the recommendation. This is a characteristic of the algorithm, not the input</h3>
+
+<br>
+
+<h2>
+    How did we do?
+</h2>
+
+<div class="like">
+    <div class="display">
+    <form action="/feedback/1">
+        <button type="submit">Like</button>
+    </form>
+    </div>
+    <div class="display">
+    <form action="/feedback/0">
+        <button type="submit">Dislike</button>
+    </form>
+    </div>
+</div>
+
+<br>
+<br>
+
+
+</html>

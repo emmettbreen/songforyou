@@ -3,29 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="{{ url_for('static', filename= 'css/style.css') }}">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
     <title>SongForYou</title>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script type="text/javascript">
+    $(document).ready(function() {
+        if(localStorage.getItem('popState') != 'shown'){
+            $("#banner").delay(2000).fadeIn();
+            localStorage.setItem('popState','shown')
+        }
+    });
+
+        function end(){
+            $("#banner").fadeOut();
+        };
+        function loading(){
+            $("#loading").show();
+            $("#content").hide();
+        };
+    </script>
 </head>
 
 
 <html>
 
-<div>
-    <h1>
-        Welcome to SongForYou
-    </h1>
-</div>
+<div id="loading"></div>
+
+<div id="content">
 
 <div>
-    <h2> {{ thanks }}</h2>
+    <div class="center">
+        <img src="/static/images/art.png" alt="Logo" width="40%" height="10%">
+    </div>
 </div>
+
 <br>
 
-<div>
-    <h2>
-        Add 5 of your favorite songs
-    </h2>
+<div class="message">
+    <h2 class="message"> {{ message }}</h2>
 </div>
 
+<div class="center">
+    <h2>
+        Enter your 5 favorite songs, wait 5 seconds, and we'll find you the perfectly calibrated song to add to your playlist!
+    </h2>
+</div>
 
 {% with messages = get_flashed_messages() %}
   {% if messages %}
@@ -37,83 +59,71 @@
   {% endif %}
 {% endwith %}
 
-
 {% from "_formhelpers.html" import render_field %}
 <form method="post">
-  <dl>
-    <p>
-    {{ render_field(form.search) }}
-  </p></dl>
-  <p><input type="submit" value="Search">
-</p></form>
-
-
-<div>
+<div class="search">
     <div>
+        {{ render_field(form.search) }}
+    </div>
+    <div>
+        <button type="submit"> Search </button>
+    </div>
+</div>
+</form>
+
+<h3 style="text-align: center"> Note: Only songs released between 1920-2020</h3>
+
+<div class="favorites">
+    <div class="{{ colors[0] }}">
         <h3> {{ choices[0] }}</h3>
     </div>
-    <div>
+    <div class="{{ colors[1] }}">
         <h3> {{ choices[1] }}</h3>
     </div>
-    <div>
+    <div class="{{ colors[2] }}">
         <h3> {{ choices[2] }}</h3>
     </div>
-    <div>
+    <div class="{{ colors[3] }}">
         <h3> {{ choices[3] }}</h3>
     </div>
-    <div>
+    <div class="{{ colors[4] }}">
         <h3> {{ choices[4] }} </h3>
     </div>
 </div>
 
+<br>
 
-<form action="/clear">
-    <button type="submit">Clear Selection</button>
+<form action="/clear/none">
+    <div class="center">
+        <button type="submit">Clear Selection</button>
+    </div>
 </form>
 
+<br>
+<br>
+
+<form action="/calculate">
+    <div class="center">
+        <button type="submit" class="big" onclick="loading();">Find My Song</button>
+    </div>
+</form>
 
 <br>
 <br>
 
-
-<div>
-    <h2>
-        And our algorithm will recommend you one more
-    </h2>
-    <form action="/calculate">
-        <button type="submit">Find My Song</button>
-    </form>
 </div>
 
-
-<div>
-    <h3>
-        Our recommendation is...
-    </h3>
-
-    <h2>
-        {{ recommendation }}
-    </h2>
-
-    <h3>
-        How did we do?
-    </h3>
-    <form action="/feedback/1">
-        <button type="submit">Like</button>
-    </form>
-    <form action="/feedback/0">
-        <button type="submit">Dislike</button>
-    </form>
-    
+<div id="banner" class="cookie-banner" style="display:none">
+    <p>
+    By using our website, you agree to our
+    <a href="/policy">cookie policy</a>
+    </p>
+    <button onclick="end();">&times;</button>
 </div>
 
-
-
 <br>
 <br>
 
-<footer>
-<h5>Emmett Breen © 2022</h5>
-</footer>
+
 
 </html>
