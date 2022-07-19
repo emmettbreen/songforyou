@@ -15,7 +15,6 @@ def recommend(favorites):
         genres += genre.split(",")
     genres = list(set(genres))
 
-    print(genres)
     if genres == []:
         return "Error: No genre decideable for songs"
 
@@ -111,10 +110,6 @@ def recommend(favorites):
                 recommended_song_stats = similar_songs[indexes[i]]
 
     confidence = max(20 * max_re - (100 * contenders / 5 / k), 0)
-    # print("")
-    # print(indexes)
-    print(max_re)
-    print(contenders)
     
     # unscale recommended song
     recommended_song_stats[4] *= 200
@@ -123,7 +118,6 @@ def recommend(favorites):
     recommended_song_stats[0] *= 50
     for i in range(len(recommended_song_stats)):
         recommended_song_stats[i] = round(recommended_song_stats[i], 4)
-    # print(recommended_song_stats)
 
     # reveal recommended song
     recommended_song = pd.read_sql('''SELECT name, artists FROM song_info WHERE ROUND(popularity,4) = ? AND ROUND(year,4) = ? AND ROUND(acousticness,4) = ? AND ROUND(speechiness,4) = ? AND ROUND(tempo,4) = ? AND ROUND(danceability,4) = ? AND ROUND(energy,4) = ? AND ROUND(instrumentalness,4) = ? AND ROUND(valence,4) = ? AND ROUND(liveness,4) = ?''', conn_df, params=recommended_song_stats)
