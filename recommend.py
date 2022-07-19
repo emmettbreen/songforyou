@@ -2,20 +2,10 @@ import pandas as pd
 import sqlite3
 import kdtree
 
-#remove song1,2,3..
-#use new dataset
-#show top 10 songs
-
 def recommend(favorites):
-    # import data
-    #df = pd.read_csv('data.csv')
-    #genre_df = pd.read_csv('artists_genres.csv')
 
     # init DB
     conn_df = sqlite3.connect('songs.db')
-
-    #conn_genre_df = sqlite3.connect('genres.db')
-    #genre_df.to_sql('genre_by_artist', conn_genre_df, if_exists='replace', index=False)
 
     # genres of favorite songs
     genres = []
@@ -58,7 +48,6 @@ def recommend(favorites):
     for favorite in favorites:
         liked_song = song_data.loc[favorite]
         liked_song = liked_song.to_numpy().tolist()
-        print(liked_song)
         if type(liked_song[0]) == list:
             liked_song = liked_song[0]
         liked_songs.append(liked_song)
@@ -77,47 +66,64 @@ def recommend(favorites):
 
     # collect k nearest neighbors of 5 liked songs
     similar_songs = []
-    dists = []
-    counts = []
     for liked_song in liked_songs:
         nn = tree.search_knn(liked_song, k)
         for n in nn:
-            node,dist= n
-            try:
-                idx = similar_songs.index(node.data)
-                dists[idx] += dist
-                counts[idx] += 1
+            node,_= n
+            similar_songs.append(node.data)
 
-            except:
-                similar_songs.append(node.data)
-                dists.append(dist)
-                counts.append(1)
 
-    # find closest song of nn
-    print(dists)
-    print(counts)
-    max_reps = max(counts)
-    contenders = 0
-    closest = float('inf')
-    rec_song_index = -1
+    # sort similar songs
     for i in range(len(similar_songs)):
-        if counts[i] == max_reps:
-            contenders += 1
-            if dists[i] < closest:
-                closest = dists[i]
-                rec_song_index = i
-    recommended_song_stats = similar_songs[rec_song_index]
+        largest = i
+        for j in range(i, len(similar_songs)):
+            for h in range(10):
+                if similar_songs[largest][h] < similar_songs[j][h]:
+                    largest = j
+                    break
+                elif similar_songs[largest][h] > similar_songs[j][h]:
+                    break
+        temp = similar_songs[largest]
+        similar_songs[largest] = similar_songs[i]
+        similar_songs[i] = temp
 
-    confidence = max(20 * max_reps - 20 * (contenders / (k * 5)), 0)
+    # count how many times similar songs appear
+    indexes = [-1] * k * k
+    counts = [0] * k * k
+    control = 0
+    for i in range(len(similar_songs) - 1):
+        counts[control] += 1
+        if similar_songs[i] != similar_songs[i + 1]:
+            indexes[control] = i
+            control += 1
+
+    # choose most occuring similar song
+    max_re = max(counts)
+    recommended_song_stats = []
+    most_recent = -1
+    contenders = 0
+    for i in range(len(counts)):
+        year = similar_songs[indexes[i]][0]
+        if counts[i] == max_re:
+            contenders +=1
+            if most_recent < year:
+                most_recent = year
+                recommended_song_stats = similar_songs[indexes[i]]
+
+    confidence = max(20 * max_re - (100 * contenders / 5 / k), 0)
+    # print("")
+    # print(indexes)
+    print(max_re)
+    print(contenders)
     
     # unscale recommended song
-    print(recommended_song_stats)
     recommended_song_stats[4] *= 200
     recommended_song_stats[3] /= 5.0
     recommended_song_stats[1] *= 1000
     recommended_song_stats[0] *= 50
     for i in range(len(recommended_song_stats)):
         recommended_song_stats[i] = round(recommended_song_stats[i], 4)
+    # print(recommended_song_stats)
 
     # reveal recommended song
     recommended_song = pd.read_sql('''SELECT name, artists FROM song_info WHERE ROUND(popularity,4) = ? AND ROUND(year,4) = ? AND ROUND(acousticness,4) = ? AND ROUND(speechiness,4) = ? AND ROUND(tempo,4) = ? AND ROUND(danceability,4) = ? AND ROUND(energy,4) = ? AND ROUND(instrumentalness,4) = ? AND ROUND(valence,4) = ? AND ROUND(liveness,4) = ?''', conn_df, params=recommended_song_stats)
