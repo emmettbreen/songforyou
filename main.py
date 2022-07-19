@@ -1,114 +1,131 @@
-from re import T
-from flask import Flask, render_template, request, flash, redirect
-from forms import SongSearchForm, SongSelectForm
+from flask import Flask, render_template, request, flash, redirect, session
 import sqlite3
 import recommend
+import pandas as pd
+from wtforms import Form, StringField
+
+class SongSearchForm(Form):
+    search = StringField('')
 
 app = Flask(__name__)
 
-favorites=[None] * 5
-full = False
-recommendation = "None"
-thanks = ""
+app.secret_key = 'enfja151532323333'
+app.config['SESSION_PERMANENT']= False
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    session['favorites'] = ["Song1", "Song2", "Song3", "Song4", "Song5"]
+    session['full'] = False
+    session['recommendation'] = "None"
+    session['message'] = ""
+    session['correlation'] = ""
+    session['confidence'] = 0
+    return redirect('/home')
+
+
+@app.route('/home', methods=['GET', 'POST'])
+def home():
     form = SongSearchForm(request.form)
     if request.method == 'POST':
         return redirect("/results/" + form.search.data)
-    global thanks
-    global recommendation
-    return render_template('index.html', form=form, choices=favorites, recommendation=recommendation, thanks=thanks)
+    colors = [""] * 5
+    for i in range(5):
+        if session['favorites'][i] == "Song1" or session['favorites'][i] == "Song2" or session['favorites'][i] == "Song3" or session['favorites'][i] == "Song4" or session['favorites'][i] == "Song5":
+            colors[i] = "blank"
+        else:
+            colors[i] = "favorite"
+    return render_template('index.html', form=form, choices=session['favorites'], message=session['message'], colors=colors)
+
+@app.route('/recommendation')
+def recommendation():
+    color =""
+    if session['confidence'] > 60:
+        color="high"
+    elif session['confidence'] > 30:
+        color="medium"
+    else:
+        color="low"
+    return render_template('recommendation.html', recommendation=session['recommendation'], correlation=session['correlation'], confidence=str(session['confidence']) + "%", color=color)
 
 @app.route('/calculate')
 def recommend_song():
-    conn = sqlite3.connect('clusters.db')
-    id = conn.execute('SELECT MAX(id) FROM clusters').fetchall()[0][0]
-    newid = 0
-    if id is not None:
-        newid = id + 1
-    global favorites
-    global recommendation
-    conn.execute('INSERT INTO clusters VALUES(? , ? , ? , ? , ? , ?);', (newid, favorites[0], favorites[1], favorites[2], favorites[3], favorites[4]))
-    conn.commit()
-    global full
-    if full:
-        global recommendation
-        recommendation = recommend.recommend(favorites)
-    return redirect("/")
+    if session['full']:
+        session['recommendation'], session['correlation'], session['confidence'] = recommend.recommend(session['favorites'])
+        # update clusters
+        conn = sqlite3.connect('clusters.db')
+        id = conn.execute('SELECT MAX(id) FROM clusters').fetchall()[0][0]
+        newid = 0
+        if id is not None:
+            newid = id + 1
+        conn.execute('INSERT INTO clusters VALUES(? , ? , ? , ? , ? , ?);', (newid, session['favorites'][0], session['favorites'][1], session['favorites'][2], session['favorites'][3], session['favorites'][4]))
+        conn.commit()
+        conn.close()
+        return redirect("/recommendation")
+    else:
+        session['message'] = "Add more songs"
+        return redirect('/home')
 
-@app.route('/clear')
-def clear():
-    global full
-    global favorites
-    global recommendation
-    global thanks
-    thanks = ""
-    full = False
-    favorites = [None] * 5
-    recommendation = "None"
-    return redirect("/")
+@app.route('/clear/<note>')
+def clear(note):
+    session['favorites'] = ["Song1", "Song2", "Song3", "Song4", "Song5"]
+    session['full'] = False
+    session['recommendation'] = "None"
+    session['correlation'] = ""
+    session['confidence'] = 0
+    return redirect("/home")
 
 @app.route('/results/')
 def return_home():
-    return redirect('/')
+    session['message'] = "No Song Found"
+    return redirect('/home')
 
 @app.route('/results/<song>', methods=['GET', 'POST'])
 def search_results(song):
     conn = sqlite3.connect('songs.db')
-    songs = conn.execute('SELECT DISTINCT name || " -- " || artists, name || " -- " || artists FROM song_info WHERE name LIKE ? ORDER BY popularity DESC LIMIT 100', (song + "%",)).fetchall()
-    if len(songs) == 0:
-        return redirect("/")
-    for i in range(len(songs)):
-        t = list(songs[i])
-        t[0] = t[0].replace('[','').replace(']','').replace('\'','')
-        t[1] = t[1].replace('[','').replace(']','').replace('\'','')
-        songs[i] = tuple(t)
+    songs = pd.read_sql('''SELECT DISTINCT name || " -- " || artists FROM song_info WHERE name LIKE ? OR artists LIKE ? ORDER BY popularity DESC LIMIT 100''', conn, params=[song + "%", song + "%"]).values[:,0]
     conn.close()
-    
-    form = SongSelectForm(request.form)
-    form.select.choices = songs
-
-    addtofavorites(form.select.data)
+    if len(songs) == 0:
+        session['message'] = "No Song Found"
+        return redirect("/home")
 
     if request.method == 'POST':
-        return redirect("/")
+        return redirect("/home")
 
-    return render_template('results.html', form=form, songs=songs)
+    return render_template('results.html', songs=songs)
 
-def addtofavorites(data):
-    global favorites
-    for i in range(5):
-        if i == 4:
-            global full
-            full = True
-            favorites[i] = data
-        elif favorites[i] is None:
-            favorites[i] = data
-            break
+@app.route('/add/<song>')
+def add(song):
+    if session['full']:
+        session['message'] = "Favorites Full"
+    else:
+        for i in range(5):
+            if i == 4:
+                session['full'] = True
+                session['favorites'][i] = song
+            elif session['favorites'][i] == "Song1" or session['favorites'][i] == "Song2" or session['favorites'][i] == "Song3" or session['favorites'][i] == "Song4" or session['favorites'][i] == "Song5":
+                session['favorites'][i] = song
+                break
+        session['message'] = ""
+    return redirect('/home')
+
+
 
 @app.route('/feedback/<like>')
 def liked(like):
-    global full
-    if not full:
-        return redirect('/')
+    if not session['full']:
+        return redirect('/home')
     conn = sqlite3.connect('accuracy.db')
     id = conn.execute('SELECT MAX(id) FROM performance').fetchall()[0][0]
     newid = 0
     if id is not None:
         newid = id + 1
-    global favorites
-    global recommendation
-    conn.execute('INSERT INTO performance VALUES (? , ? , ? , ? , ? , ? , ? , ?);', (newid, favorites[0], favorites[1], favorites[2], favorites[3], favorites[4], recommendation, like))
+    conn.execute('INSERT INTO performance VALUES (? , ? , ? , ? , ? , ? , ? , ?);', (newid, session['favorites'][0], session['favorites'][1], session['favorites'][2], session['favorites'][3], session['favorites'][4], session['recommendation'], like))
     conn.commit()
-    global thanks
-    thanks = "Thank you for your feedback!"
-    return redirect('/')
+    conn.close()
+    session['message'] = "Thank you for your feedback!"
+    return redirect('/clear/' + session['message'])
 
 
-if __name__ == '__main__':
-    app.config.update(
-        TESTING=True,
-        SECRET_KEY = "flask rocks!"
-    )
-    app.run()
+@app.route('/policy')
+def policy():
+    return render_template('policy.html')
