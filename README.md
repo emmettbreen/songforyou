@@ -2,7 +2,7 @@
 
 ## 2022
 
-https://songforyou.pythonanywhere.com is a song recommendation webapp that uses machine learning techniques to help find your perfect song. It has achieved over 7000+ visitors since its release on July 4, 2022. The software required to create SongForYou includes:
+https://songforyou.pythonanywhere.com is a song recommendation web app that uses machine learning techniques to help find your perfect song. It has achieved over 7000+ visitors since its release on July 4, 2022. The software required to create SongForYou includes:
 
 Frontend:
 - Python (flask)
