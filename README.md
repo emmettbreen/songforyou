@@ -22,6 +22,22 @@ SongForYou also collects cookies to make improvements. The policy can be found h
 
 <img width="640" alt="Screen Shot 2022-07-20 at 9 33 29 AM" src="https://user-images.githubusercontent.com/90010213/179995853-e28fe195-5d42-420a-84c0-6c82d52ce84e.png">
 
+## References
+
+https://www.kaggle.com/datasets/vatsalmavani/spotify-dataset/versions/1?resource=download
+
+https://towardsdatascience.com/how-to-build-a-simple-song-recommender-296fcbc8c85
+
+https://medium.com/@briansrebrenik/introduction-to-music-recommendation-and-machine-learning-310c4841b01d
+
+https://mungingdata.com/sqlite/create-database-load-csv-python/
+
+https://www.digitalocean.com/community/tutorials/how-to-make-a-web-application-using-flask-in-python-3
+
+https://www.blog.pythonlibrary.org/2017/12/13/flask-101-how-to-add-a-search-form/
+
+https://flask.palletsprojects.com/en/2.0.x/config/
+
 
 
 
